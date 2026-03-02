@@ -19,11 +19,18 @@ This repository implements an MVP control plane for the PRD:
 
 ## Local Run
 
-### 1) Install dependencies
+### 1) Bootstrap local environment
 
 ```bash
-npm install
+npm run setup:dev
 ```
+
+This command:
+
+- Installs Node dependencies from `package-lock.json`
+- Runs `go mod download` for `agent/`
+- Checks for Docker + Docker Compose + Redis tooling
+- Ensures `.env` contains `REDIS_URL=redis://127.0.0.1:6379`
 
 ### 2) Start Redis
 
@@ -31,7 +38,7 @@ npm install
 docker compose up -d redis
 ```
 
-### 3) Configure environment
+### 3) Configure environment (optional if setup already created `.env`)
 
 ```bash
 cp .env.example .env
