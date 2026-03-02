@@ -1,0 +1,28 @@
+{
+  "name": "x402-gated-vpn",
+  "version": "0.1.0",
+  "description": "Pay-per-minute WireGuard VPN gated by x402",
+  "type": "module",
+  "scripts": {
+    "start:api": "node api/src/server.js",
+    "start:billing": "node billing/src/worker.js",
+    "seed:regions": "node scripts/seedRegions.js",
+    "test": "node --test",
+    "agent:run": "go run ./agent"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nealmalhotra/402-vpn.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@x402/core": "^2.5.0",
+    "@x402/evm": "^2.5.0",
+    "@x402/express": "^2.5.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.10.0",
+    "uuid": "^13.0.0",
+    "zod": "^3.25.76"
+  }
+}
