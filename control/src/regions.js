@@ -8,6 +8,7 @@ export const DEFAULT_REGIONS = [
     endpoint: "203.0.113.10:51820",
     public_key: "REPLACE_WITH_REAL_US_WEST_WG_PUBLIC_KEY",
     subnet: "10.8.0.0/24",
+    proxy_url: "",
     price_per_minute_usd: 0.001,
   },
   {
@@ -16,12 +17,13 @@ export const DEFAULT_REGIONS = [
     endpoint: "198.51.100.20:51820",
     public_key: "REPLACE_WITH_REAL_EU_CENTRAL_WG_PUBLIC_KEY",
     subnet: "10.9.0.0/24",
+    proxy_url: "",
     price_per_minute_usd: 0.001,
   },
 ];
 
 function assertRegionShape(region) {
-  if (!region?.id || !region?.endpoint || !region?.public_key || !region?.subnet) {
+  if (!region?.id || typeof region?.price_per_minute_usd !== "number") {
     throw new Error(`Invalid region definition: ${JSON.stringify(region)}`);
   }
 }
@@ -37,6 +39,7 @@ function parseRegionHash(id, hash) {
     endpoint: hash.endpoint,
     public_key: hash.public_key,
     subnet: hash.subnet,
+    proxy_url: hash.proxy_url || null,
     price_per_minute_usd: Number(hash.price_per_minute_usd),
   };
 }
@@ -49,15 +52,16 @@ export async function seedRegions(redis, regions = DEFAULT_REGIONS) {
     await redis.hset(regionKey(region.id), {
       region_id: region.id,
       city: region.city ?? region.id,
-      endpoint: region.endpoint,
-      public_key: region.public_key,
-      subnet: region.subnet,
+      endpoint: region.endpoint ?? "",
+      public_key: region.public_key ?? "",
+      subnet: region.subnet ?? "",
+      proxy_url: region.proxy_url ?? "",
       price_per_minute_usd: String(region.price_per_minute_usd),
     });
 
     const poolKey = regionIpPoolKey(region.id);
     const poolCount = await redis.scard(poolKey);
-    if (poolCount === 0) {
+    if (poolCount === 0 && region.subnet) {
       const pool = generateIpv4PoolFrom24Cidr(region.subnet);
       if (pool.length > 0) {
         await redis.sadd(poolKey, ...pool);

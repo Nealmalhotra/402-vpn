@@ -30,5 +30,6 @@ test("buildStatusPayload includes low-credit warning under 60 seconds", () => {
 
   assert.equal(payload.low_credit_warning, true);
   assert.equal(payload.credit_seconds, 55);
+  assert.equal(payload.mode, "wireguard");
   assert.equal(payload.warning, "Credit below 60 seconds. Top up soon to avoid eviction.");
 });
