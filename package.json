@@ -4,11 +4,12 @@
   "description": "Pay-per-minute WireGuard VPN gated by x402",
   "type": "module",
   "scripts": {
-    "start:api": "node api/src/server.js",
-    "start:billing": "node billing/src/worker.js",
-    "seed:regions": "node scripts/seedRegions.js",
+    "setup:dev": "bash scripts/setup-dev.sh",
+    "start:api": "REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379} node api/src/server.js",
+    "start:billing": "REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379} node billing/src/worker.js",
+    "seed:regions": "REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379} node scripts/seedRegions.js",
     "test": "node --test",
-    "agent:run": "go run ./agent"
+    "agent:run": "REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379} go run ./agent"
   },
   "repository": {
     "type": "git",
