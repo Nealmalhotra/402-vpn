@@ -1,0 +1,55 @@
+flowchart TB
+    subgraph User["👤 User / AI Agent"]
+        A[Start] --> B[GET /regions]
+    end
+
+    subgraph API["API Server"]
+        B --> C[List regions & pricing]
+        C --> D{Choose mode}
+        D -->|Proxy mode| E[POST /session/create<br/>region, minutes, mode: proxy]
+        D -->|WireGuard mode| F[POST /session/create<br/>region, minutes, mode: wireguard, public_key]
+    end
+
+    subgraph X402["402 Payment (when enabled)"]
+        E --> G{Payment required?}
+        F --> G
+        G -->|Yes| H[402 Payment Required]
+        H --> I[User pays via x402<br/>EVM/USDC on-chain]
+        I --> J[Retry with payment proof]
+        J --> K[Session created]
+        G -->|No / paid| K
+    end
+
+    subgraph ProxyPath["Proxy mode path"]
+        K -->|proxy| L[Receive token]
+        L --> M[GET/POST /fetch<br/>Authorization: Bearer token]
+        M --> N[Request proxied through region]
+        N --> O[Response returned]
+        L --> P[GET /session/me<br/>Check status & remaining credit]
+    end
+
+    subgraph WireGuardPath["WireGuard mode path"]
+        K -->|wireguard| Q[Receive wireguard_config<br/>server_public_key, assigned_ip, endpoint]
+        Q --> R[Configure WireGuard client]
+        R --> S[Connect to VPN tunnel]
+        S --> T[All traffic routes through region]
+    end
+
+    subgraph TopUp["Running out of credit?"]
+        P --> U{Out of credit?}
+        U -->|Yes| V[POST /session/:id/topup<br/>402-gated]
+        V --> W[Pay & add minutes]
+        W --> M
+        U -->|No| M
+    end
+
+    subgraph Background["Background (invisible to user)"]
+        K --> X[Billing worker]
+        X --> Y[Consumes credit over time<br/>per session duration]
+        Y --> Z[Session expires when credit = 0]
+    end
+
+    style A fill:#e1f5fe
+    style K fill:#c8e6c9
+    style H fill:#fff9c4
+    style I fill:#fff9c4

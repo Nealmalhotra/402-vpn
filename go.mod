@@ -1,4 +1,4 @@
-module x402-gated-vpn/agent
+module 402-vpn
 
 go 1.22
 

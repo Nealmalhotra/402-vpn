@@ -1,0 +1,46 @@
+sequenceDiagram
+    autonumber
+    participant U as User / AI Agent
+    participant API as API
+    participant X402 as 402 Payment
+    participant Regional as Regional Node
+
+    Note over U,Regional: Discovery
+    U->>+API: GET /regions
+    API-->>-U: regions[], pricing
+
+    Note over U,Regional: Session Creation
+    U->>+API: POST /session/create {region, minutes, mode}
+    alt x402 enabled
+        API->>U: 402 Payment Required
+        U->>X402: Pay (EVM/USDC)
+        X402-->>U: Payment proof
+        U->>API: Retry with payment proof
+    end
+    API-->>-U: token + session (proxy) OR wireguard_config (wireguard)
+
+    alt Proxy mode
+        Note over U,Regional: Use proxy
+        loop Until session expires
+            U->>+API: GET/POST /fetch (Bearer token) {url, method?}
+            API->>Regional: Forward request
+            Regional->>API: Response
+            API-->>-U: Response
+        end
+        U->>+API: GET /session/me (Bearer token)
+        API-->>-U: status, credit_seconds, expires_at
+    else WireGuard mode
+        Note over U,Regional: Use WireGuard
+        U->>U: Configure client with wireguard_config
+        U->>Regional: Connect VPN tunnel
+        Note over U,Regional: All traffic flows through region
+    end
+
+    Note over U,Regional: Top-up (optional)
+    U->>+API: POST /session/:id/topup {minutes}
+    alt x402 enabled
+        API->>U: 402 Payment Required
+        U->>X402: Pay
+        U->>API: Retry with payment proof
+    end
+    API-->>-U: new credit_seconds, token (proxy)

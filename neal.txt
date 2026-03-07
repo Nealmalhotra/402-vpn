@@ -1,0 +1,7 @@
+curl -s -X POST http://localhost:3000/session/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "region": "us-west",
+    "public_key": "HSR2qxNZ18bZR978GM9mzT1BCq4pumxHmapUAwYxDFM=",
+    "minutes": 15
+  }' | jq
