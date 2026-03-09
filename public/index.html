@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>402-VPN — Pay-Per-Minute Proxy</title>
+<style>
+  :root { --bg: #0a0a0b; --fg: #e4e4e7; --dim: #71717a; --accent: #3b82f6; --green: #22c55e; --border: #27272a; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.6; }
+  .container { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; }
+  h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--dim); font-size: 1.1rem; margin-bottom: 2.5rem; }
+  h2 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--fg); }
+  p, li { color: #a1a1aa; font-size: 0.95rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: #18181b; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.85em; font-family: 'SF Mono', 'Fira Code', monospace; }
+  pre { background: #18181b; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; margin: 1rem 0; }
+  pre code { background: none; padding: 0; font-size: 0.82rem; line-height: 1.7; color: #d4d4d8; }
+  .badge { display: inline-block; background: #14532d; color: var(--green); font-size: 0.75rem; font-weight: 600; padding: 0.2em 0.6em; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #d4d4d8; }
+  .price { font-size: 2rem; font-weight: 700; color: var(--fg); }
+  .price-unit { color: var(--dim); font-size: 0.9rem; font-weight: 400; }
+  .footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--dim); font-size: 0.8rem; }
+  .cta { display: inline-block; background: var(--accent); color: white; padding: 0.6rem 1.5rem; border-radius: 6px; font-weight: 600; margin-top: 1rem; }
+  .cta:hover { background: #2563eb; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>402<span>-VPN</span></h1>
+<p class="subtitle">Pay-per-minute HTTP proxy for AI agents. Pay with USDC, get a bearer token, proxy requests through regional exit nodes.</p>
+
+<h2>How it works</h2>
+<ol style="padding-left:1.2rem; margin:0.5rem 0;">
+  <li>Call <code>POST /session/create</code> — x402 auto-charges your wallet in USDC</li>
+  <li>Get a bearer token + session ID</li>
+  <li>Proxy requests through <code>POST /fetch</code> using the token</li>
+  <li>Top up anytime with <code>POST /session/:id/topup</code></li>
+</ol>
+
+<h2>Pricing</h2>
+<p><span class="price">$0.001</span> <span class="price-unit">/ minute</span></p>
+<p>Minimum 10 minutes ($0.01) per session. Paid in USDC on Base Sepolia<span class="badge">testnet</span></p>
+
+<h2>Regions</h2>
+<table>
+  <tr><th>Region</th><th>City</th><th>Status</th></tr>
+  <tr><td><code>us-west</code></td><td>Seattle</td><td style="color:var(--green)">● Online</td></tr>
+  <tr><td><code>eu-central</code></td><td>Frankfurt</td><td style="color:var(--dim)">○ Coming soon</td></tr>
+</table>
+
+<h2>Quick start</h2>
+<pre><code>npm install @x402/fetch @x402/evm viem</code></pre>
+<pre><code><span style="color:#6b7280">// Create a paid session</span>
+import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { privateKeyToAccount } from "viem/accounts";
+
+const account = privateKeyToAccount(process.env.EVM_PRIVATE_KEY);
+const client = new x402Client().register("eip155:*", new ExactEvmScheme(account));
+const pay = wrapFetchWithPayment(fetch, client);
+
+<span style="color:#6b7280">// This auto-pays USDC and returns your session</span>
+const res = await pay("https://YOUR_DOMAIN/session/create", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ region: "us-west", minutes: 10, mode: "proxy" }),
+});
+const { token } = await res.json();
+
+<span style="color:#6b7280">// Proxy requests (free while session is active)</span>
+const result = await fetch("https://YOUR_DOMAIN/fetch", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", Authorization: \`Bearer \${token}\` },
+  body: JSON.stringify({ url: "https://example.com", method: "GET" }),
+});
+const { status, headers, body } = await result.json();</code></pre>
+
+<h2>API endpoints</h2>
+<table>
+  <tr><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+  <tr><td><code>GET /regions</code></td><td>None</td><td>List available regions</td></tr>
+  <tr><td><code>POST /session/create</code></td><td>x402</td><td>Create session</td></tr>
+  <tr><td><code>POST /session/:id/topup</code></td><td>x402</td><td>Add minutes</td></tr>
+  <tr><td><code>GET /session/me</code></td><td>Bearer</td><td>Session status</td></tr>
+  <tr><td><code>POST /fetch</code></td><td>Bearer</td><td>Proxy a request</td></tr>
+</table>
+
+<p style="margin-top:2rem;"><a href="/docs/agent-quickstart" class="cta">Full API Docs →</a></p>
+
+<div class="footer">
+  <p><a href="/terms">Terms of Service</a> · <a href="https://github.com/Nealmalhotra/402-vpn">GitHub</a></p>
+  <p style="margin-top:0.5rem;">Payments secured by <a href="https://x402.org">x402 protocol</a> on Base</p>
+</div>
+
+</div>
+</body>
+</html>
