@@ -68,7 +68,7 @@ const client = new x402Client().register("eip155:*", new ExactEvmScheme(account)
 const pay = wrapFetchWithPayment(fetch, client);
 
 <span style="color:#6b7280">// This auto-pays USDC and returns your session</span>
-const res = await pay("https://YOUR_DOMAIN/session/create", {
+const res = await pay("https://144-202-82-48.sslip.io/session/create", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ region: "us-west", minutes: 10, mode: "proxy" }),
@@ -76,7 +76,7 @@ const res = await pay("https://YOUR_DOMAIN/session/create", {
 const { token } = await res.json();
 
 <span style="color:#6b7280">// Proxy requests (free while session is active)</span>
-const result = await fetch("https://YOUR_DOMAIN/fetch", {
+const result = await fetch("https://144-202-82-48.sslip.io/fetch", {
   method: "POST",
   headers: { "Content-Type": "application/json", Authorization: \`Bearer \${token}\` },
   body: JSON.stringify({ url: "https://example.com", method: "GET" }),

@@ -19,7 +19,7 @@ import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { privateKeyToAccount } from "viem/accounts";
 
-const API = process.env.VPN_API_URL; // e.g. http://your-control-plane:3000
+const API = process.env.VPN_API_URL || "https://144-202-82-48.sslip.io";
 const account = privateKeyToAccount(process.env.EVM_PRIVATE_KEY);
 const client = new x402Client().register("eip155:*", new ExactEvmScheme(account));
 const pay = wrapFetchWithPayment(fetch, client);
